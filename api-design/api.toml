@@ -1,0 +1,128 @@
+# reading https://cloud.google.com/apis/design/
+[[card]]
+front = "common protocols covered by google api design recommendations"
+back = "rest and grpc"
+
+[[card]]
+front = "what serialization format does grpc use?"
+back = "protocol buffers"
+
+[[card]]
+front = "RPC APIs are often designed in terms of interfaces and methods. Why can this be bad?"
+back = """
+over time this might lead to an overwhelming API surface area. 
+developers must learn each method individually. 
+"""
+
+[[card]]
+front = "In what way is REST > RPC?"
+back = """
+The architectural style of REST was introduced, primarily designed to work well with HTTP/1.1, 
+but also to help tackle this problem. Its core principle is to define named resources that can be 
+manipulated using a small number of methods. The resources and methods are known as nouns and verbs of APIs. 
+With the HTTP protocol, the resource names naturally map to URLs, and methods naturally map to HTTP methods 
+POST, GET, PUT, PATCH, and DELETE. This results in much fewer things to learn, since developers can focus on 
+the resources and their relationship, and assume that they have the same small number of standard methods.
+"""
+
+[[card]]
+front = "Roughly what percent of internet traffic (at peak) is video? What protocol would you use to transmit video?"
+back = "roughly half. Socket-based RPC API > REST API in this case. Most people would use RPC inside their data centers for most network traffic too. "
+
+
+[[card]]
+front = "what are nouns in the context of a REST API?"
+back = "Typically individually-addressable resources, manipulated via a small number of standard methods."
+
+[[card]]
+front = "name some HTTP verbs"
+back = """GET, PUT, POST, DELETE, PATCH, HEAD, OPTIONS
+E.g., `curl -X OPTIONS http://example.org -i`
+responds with an Allow header: 
+
+```
+HTTP/1.1 200 OK
+Allow: OPTIONS, GET, HEAD, POST
+Cache-Control: max-age=604800
+Date: Thu, 13 Oct 2016 11:45:00 GMT
+Expires: Thu, 20 Oct 2016 11:45:00 GMT
+Server: EOS (lax004/2813)
+x-ec-custom-error: 1
+Content-Length: 0
+```
+"""
+
+[[card]]
+front = "what are high level steps for designing a resource-based API?"
+back = """
+Determine what types of resources an API provides.
+Determine the relationships between resources.
+Decide the resource name schemes based on types and relationships.
+Decide the resource schemas.
+Attach minimum set of methods to resources.
+"""
+
+[[card]]
+front = "how is a resource-oriented API generally modeled?"
+back = """As a resource hierarchy, where each node is either a simple resource or a collection resource. 
+A resource has some state and zero or more sub-resources, each of which can in turn be either a simple resource 
+or a collection. The key characteristic of such an API is that it emphasizes the data model over functionality. """
+
+[[card]]
+front = "what methods should be used on a resource?"
+back = """try to use the standard HTTP verbs when possible (plus "list" for collections) 
+Note that the recommended naming pattern for custom methods is a colon (:), e.g., https://service.name/v1/some/resource/name:customVerb
+
+gRPC makes custom methods easy: https://cloud.google.com/apis/design/custom_methods
+
+common use-cases for custom methods:
+- cancel
+- batch get
+- move
+- search
+- undelete
+"""
+
+[[card]]
+front = "API examples"
+back = """
+API service: gmail.googleapis.com
+
+A collection of users: users/*. Each user has the following resources.
+
+A collection of messages: users/*/messages/*.
+A collection of threads: users/*/threads/*.
+A collection of labels: users/*/labels/*.
+A collection of change history: users/*/history/*.
+
+A resource representing the user profile: users/*/profile.
+A resource representing user settings: users/*/settings.
+
+"""
+
+[[card]]
+front = "what is an example of a scheme-less DNS compatible resource name? "
+back = """
+//library.googleapis.com/shelves/shelf1/books/book2
+
+FYI, also use scheme-less URIs in HTML:
+<img src="//domain.com/img/logo.png">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
+
+"""
+
+[[card]]
+front = "resource name vs URL?"
+back = """
+
+While full resource names resemble normal URLs, they are not the same thing. A single resource can be exposed by different API versions, API protocols, or API network endpoints. The full resource name does not specify such information, so it must be mapped to a specific API version and API protocol for actual use.
+
+To use a full resource name via REST APIs, it must be converted to a REST URL by adding the HTTPS scheme before the service name, adding the API major version before the resource path, and URL-escaping the resource path. For example:
+
+
+// This is a calendar event resource name.
+"//calendar.googleapis.com/users/john smith/events/123"
+
+// This is the corresponding HTTP URL.
+"https://calendar.googleapis.com/v3/users/john%20smith/events/123"
+"""
